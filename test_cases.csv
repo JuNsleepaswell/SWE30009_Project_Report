@@ -1,11 +1,11 @@
 tc_id,description,u1,u2,u3,u4,u5,u6,u7,u8,b1,b2,b3,b4,b5,b6,b7,b8,expected_total
-TC01,all zero usage,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.00
-TC02,only first model,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,132.50
-TC03,only last model,0,0,0,0,0,0,0,25,0,0,0,0,0,0,0,0,212.00
-TC04,one typical model,0,40,0,0,0,0,0,0,0,0,0,0,0,0,0,0,593.60
-TC05,all 8 models no batch,1,2,3,4,5,6,7,8,0,0,0,0,0,0,0,0,260.76
-TC06,all 8 models all batch,1,2,3,4,5,6,7,8,1,1,1,1,1,1,1,1,130.38
-TC07,mixed batch,1,2,3,4,5,6,7,8,1,0,1,0,1,0,1,0,212.00
-TC08,decimal usage rounding,0,0,0,0,0,0,0.125,0,0,0,0,0,0,0,0,0,0.27
-TC09,very large usage,100000,100000,0,0,0,0,0,0,0,1,0,0,0,0,0,0,2067000.00
-TC10,very small usage,0.001,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.01
+TC01,No usage entered so the bill should be zero,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.00
+TC02,First model only to check the loop includes row 1,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,132.50
+TC03,Last model only to check the loop includes row 8,0,0,0,0,0,0,0,25,0,0,0,0,0,0,0,0,212.00
+TC04,Single typical model with whole-number usage,0,40,0,0,0,0,0,0,0,0,0,0,0,0,0,0,593.60
+TC05,All 8 models summed with no discount,1,2,3,4,5,6,7,8,0,0,0,0,0,0,0,0,260.76
+TC06,Batch discount applied to every model,1,2,3,4,5,6,7,8,1,1,1,1,1,1,1,1,130.38
+TC07,Batch discount applied only to odd-numbered models,1,2,3,4,5,6,7,8,1,0,1,0,1,0,1,0,212.00
+TC08,Total lands on half a sen to check half-up rounding,0,0,0,0,0,0,0.125,0,0,0,0,0,0,0,0,0,0.27
+TC09,Maximum allowed usage with batch on one model,100000,100000,0,0,0,0,0,0,0,1,0,0,0,0,0,0,2067000.00
+TC10,Tiny usage that still rounds to one sen,0.001,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.01
