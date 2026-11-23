@@ -1,0 +1,68 @@
+# Runs the Selenium test suite on Ubuntu. Manual trigger only.
+name: Test (Ubuntu)
+
+# Only runs when started by hand from the Actions tab (no push/PR triggers).
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    # Hosted Ubuntu runner.
+    runs-on: ubuntu-latest
+    # Kill the job if it hangs; 30 minutes is far more than needed.
+    timeout-minutes: 30
+
+    steps:
+      # Download this repository's files onto the runner.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Install Python 3.11 so we can run http.server and the test script.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Install Selenium (the only dependency) from requirements.txt.
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Chrome is normally preinstalled on ubuntu-latest; install it from
+      # Google's .deb only if it is missing. Selenium Manager then fetches a
+      # matching chromedriver automatically at run time.
+      - name: Ensure Chrome is available
+        run: |
+          if ! command -v google-chrome >/dev/null 2>&1; then
+            wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            sudo apt-get update
+            sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
+          fi
+          google-chrome --version
+
+      # Serve the app on port 8000 in the background (trailing &), then poll
+      # until it answers so the tests never start before the server is up.
+      - name: Start web server in background
+        run: |
+          nohup python -m http.server 8000 > server.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/index.html > /dev/null && break
+            sleep 1
+          done
+          curl -sf http://localhost:8000/index.html > /dev/null
+
+      # Run the tests. GitHub sets CI=true automatically, so Chrome runs
+      # headless. The script exits 1 on any failure, which fails this step.
+      - name: Run Selenium tests
+        run: python test_gateway.py
+
+      # Upload report.html and the screenshots even if the tests failed
+      # (if: always()), so failures can be inspected.
+      - name: Upload report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-ubuntu
+          path: |
+            report.html
+            screenshots/
+          if-no-files-found: warn

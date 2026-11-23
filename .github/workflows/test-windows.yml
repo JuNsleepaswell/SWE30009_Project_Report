@@ -1,0 +1,82 @@
+# Runs the Selenium test suite on Windows. Manual trigger only.
+# Same flow as test-ubuntu.yml; OS-specific differences are commented.
+name: Test (Windows)
+
+# Only runs when started by hand from the Actions tab (no push/PR triggers).
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    # Hosted Windows runner (differs from Ubuntu: Windows Server image).
+    runs-on: windows-latest
+    # Kill the job if it hangs; 30 minutes is far more than needed.
+    timeout-minutes: 30
+
+    # Windows differs from Ubuntu: use PowerShell for every run step instead
+    # of bash, so the commands below are PowerShell syntax.
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      # Download this repository's files onto the runner.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Install Python 3.11 so we can run http.server and the test script.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Install Selenium (the only dependency) from requirements.txt.
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Chrome is normally preinstalled on windows-latest. Windows differs
+      # from Ubuntu: Chrome is not on PATH, so check its install folder, and
+      # install with Chocolatey (not apt) only if it is missing.
+      - name: Ensure Chrome is available
+        run: |
+          $chrome = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+          if (-not (Test-Path $chrome)) {
+            choco install googlechrome -y --no-progress
+          }
+          (Get-Item $chrome).VersionInfo.ProductVersion
+
+      # Windows differs from Ubuntu: there is no "&" background job that
+      # survives the step, so Start-Process launches the server detached.
+      # Start-Sleep polling (instead of curl) waits until it answers.
+      - name: Start web server in background
+        run: |
+          Start-Process -FilePath python -ArgumentList "-m","http.server","8000" -WindowStyle Hidden
+          for ($i = 0; $i -lt 30; $i++) {
+            try {
+              Invoke-WebRequest -Uri "http://localhost:8000/index.html" -UseBasicParsing | Out-Null
+              break
+            } catch {
+              Start-Sleep -Seconds 1
+            }
+          }
+          Invoke-WebRequest -Uri "http://localhost:8000/index.html" -UseBasicParsing | Out-Null
+
+      # Run the tests. CI=true is set by GitHub, so Chrome runs headless.
+      # Windows differs from Ubuntu: the console defaults to a legacy code
+      # page, so PYTHONIOENCODING=utf-8 stops print() raising encoding errors.
+      - name: Run Selenium tests
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python test_gateway.py
+
+      # Upload report.html and the screenshots even if the tests failed
+      # (if: always()), so failures can be inspected.
+      - name: Upload report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-windows
+          path: |
+            report.html
+            screenshots/
+          if-no-files-found: warn
