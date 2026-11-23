@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LLM AI Gateway Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="card">
+    <header class="card-header">
+      <h1>LLM AI Gateway Dashboard</h1>
+      <p class="subtitle">Estimate your monthly bill. Enter usage in millions of tokens (M tokens).</p>
+    </header>
+
+    <div class="table-wrap">
+      <table id="model-table">
+        <thead>
+          <tr>
+            <th scope="col">Model</th>
+            <th scope="col">Provider</th>
+            <th scope="col" class="num">Price (RM / 1M tokens)</th>
+            <th scope="col" class="num">Usage (M tokens)</th>
+            <th scope="col" class="center">Batch API (50% off)</th>
+          </tr>
+        </thead>
+        <tbody id="model-body">
+          <!-- Rows are generated from the MODELS array in script.js -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="actions">
+      <button type="button" id="calculate-btn">Calculate Bill</button>
+    </div>
+
+    <div id="error-message" class="error" role="alert" hidden></div>
+
+    <section id="summary" class="summary" aria-live="polite">
+      <h2>Bill Summary</h2>
+
+      <p id="summary-empty" class="muted">Press "Calculate Bill" to see your charges.</p>
+
+      <div id="summary-table-wrap" class="table-wrap" hidden>
+        <table id="summary-table">
+          <thead>
+            <tr>
+              <th scope="col">Model</th>
+              <th scope="col" class="num">Usage (M tokens)</th>
+              <th scope="col" class="center">Batch</th>
+              <th scope="col" class="num">Cost</th>
+            </tr>
+          </thead>
+          <tbody id="summary-body"></tbody>
+        </table>
+      </div>
+
+      <dl class="totals">
+        <div class="totals-row">
+          <dt>Subtotal</dt>
+          <dd id="subtotal">--</dd>
+        </div>
+        <div class="totals-row">
+          <dt>SST (6%)</dt>
+          <dd id="sst">--</dd>
+        </div>
+        <div class="totals-row grand">
+          <dt>Total</dt>
+          <dd id="total-amount">--</dd>
+        </div>
+      </dl>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
